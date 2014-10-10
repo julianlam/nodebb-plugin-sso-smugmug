@@ -5,41 +5,44 @@
 		meta = module.parent.require('./meta'),
 		db = module.parent.require('../src/database'),
 		passport = module.parent.require('passport'),
-  		passportDropbox = require('passport-dropbox-oauth2').Strategy,
+  		passportSmugMug = require('passport-smugmug').Strategy,
   		fs = module.parent.require('fs'),
   		path = module.parent.require('path'),
+  		async = module.parent.require('async'),
   		nconf = module.parent.require('nconf');
 
 	var constants = Object.freeze({
-		'name': "Dropbox",
+		'name': "SmugMug",
 		'admin': {
-			'route': '/plugins/sso-dropbox',
-			'icon': 'fa-dropbox'
+			'route': '/plugins/sso-smugmug',
+			'icon': 'fa-camera-retro'
 		}
 	});
 
-	var Dropbox = {};
+	var SmugMug = {};
 
-	Dropbox.init = function(app, middleware, controllers, callback) {
+	SmugMug.init = function(app, middleware, controllers, callback) {
 		function render(req, res, next) {
-			res.render('admin/plugins/sso-dropbox', {});
+			res.render('admin/plugins/sso-smugmug', {
+				url: nconf.get('url')
+			});
 		}
 
-		app.get('/admin/plugins/sso-dropbox', middleware.admin.buildHeader, render);
-		app.get('/api/admin/plugins/sso-dropbox', render);
+		app.get('/admin/plugins/sso-smugmug', middleware.admin.buildHeader, render);
+		app.get('/api/admin/plugins/sso-smugmug', render);
 
 		callback();
 	}
 
-	Dropbox.getStrategy = function(strategies, callback) {
-		meta.settings.get('sso-dropbox', function(err, settings) {
-			if (!err && settings['id'] && settings['secret']) {
-				passport.use(new passportDropbox({
-					clientID: settings['id'],
-					clientSecret: settings['secret'],
-					callbackURL: nconf.get('url') + '/auth/dropbox/callback'
-				}, function(accessToken, refreshToken, profile, done) {
-					Dropbox.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
+	SmugMug.getStrategy = function(strategies, callback) {
+		meta.settings.get('sso-smugmug', function(err, settings) {
+			if (!err && settings['key'] && settings['secret']) {
+				passport.use(new passportSmugMug({
+					consumerKey: settings['key'],
+					consumerSecret: settings['secret'],
+					callbackURL: nconf.get('url') + '/auth/smugmug/callback'
+				}, function(token, tokenSecret, profile, done) {
+					SmugMug.login(profile.id, profile.displayName, function(err, user) {
 						if (err) {
 							return done(err);
 						}
@@ -48,10 +51,10 @@
 				}));
 
 				strategies.push({
-					name: 'dropbox-oauth2',
-					url: '/auth/dropbox',
-					callbackURL: '/auth/dropbox/callback',
-					icon: 'fa-dropbox'
+					name: 'smugmug',
+					url: '/auth/smugmug',
+					callbackURL: '/auth/smugmug/callback',
+					icon: 'fa-camera-retro'
 				});
 			}
 
@@ -59,8 +62,8 @@
 		});
 	};
 
-	Dropbox.login = function(dropboxId, handle, email, callback) {
-		Dropbox.getUid(dropboxId, function(err, uid) {
+	SmugMug.login = function(smugmugId, handle, callback) {
+		SmugMug.getUid(smugmugId, function(err, uid) {
 			if(err) {
 				return callback(err);
 			}
@@ -73,37 +76,37 @@
 			} else {
 				// New User
 				var success = function(uid) {
-					// Save dropbox-specific information to the user
-					User.setUserField(uid, 'dropboxId', dropboxId);
-					db.setObjectField('dropboxId:uid', dropboxId, uid);
+					// Save smugmug-specific information to the user
+					User.setUserField(uid, 'smugmugId', smugmugId);
+					db.setObjectField('smugmugId:uid', smugmugId, uid);
 					callback(null, {
 						uid: uid
 					});
 				};
 
-				User.getUidByEmail(email, function(err, uid) {
-					if(err) {
-						return callback(err);
-					}
+				// User.getUidByEmail(email, function(err, uid) {
+				// 	if(err) {
+				// 		return callback(err);
+				// 	}
 
-					if (!uid) {
-						User.create({username: handle, email: email}, function(err, uid) {
+				// 	if (!uid) {
+						User.create({username: handle/*, email: email*/}, function(err, uid) {
 							if(err) {
 								return callback(err);
 							}
 
 							success(uid);
 						});
-					} else {
-						success(uid); // Existing account -- merge
-					}
-				});
+				// 	} else {
+				// 		success(uid); // Existing account -- merge
+				// 	}
+				// });
 			}
 		});
 	};
 
-	Dropbox.getUid = function(dropboxId, callback) {
-		db.getObjectField('dropboxId:uid', dropboxId, function(err, uid) {
+	SmugMug.getUid = function(smugmugId, callback) {
+		db.getObjectField('smugmugId:uid', smugmugId, function(err, uid) {
 			if (err) {
 				return callback(err);
 			}
@@ -111,7 +114,7 @@
 		});
 	};
 
-	Dropbox.addMenuItem = function(custom_header, callback) {
+	SmugMug.addMenuItem = function(custom_header, callback) {
 		custom_header.authentication.push({
 			"route": constants.admin.route,
 			"icon": constants.admin.icon,
@@ -121,20 +124,20 @@
 		callback(null, custom_header);
 	};
 
-	Dropbox.deleteUserData = function(uid, callback) {
+	SmugMug.deleteUserData = function(uid, callback) {
 		async.waterfall([
-			async.apply(User.getUserField, uid, 'dropboxId'),
+			async.apply(User.getUserField, uid, 'smugmugId'),
 			function(oAuthIdToDelete, next) {
-				db.deleteObjectField('dropboxId:uid', oAuthIdToDelete, next);
+				db.deleteObjectField('smugmugId:uid', oAuthIdToDelete, next);
 			}
 		], function(err) {
 			if (err) {
-				winston.error('[sso-oauth] Could not remove dropbox data for uid ' + uid + '. Error: ' + err);
+				winston.error('[sso-oauth] Could not remove SmugMug data for uid ' + uid + '. Error: ' + err);
 				return callback(err);
 			}
 			callback();
 		});
 	};
 
-	module.exports = Dropbox;
+	module.exports = SmugMug;
 }(module));

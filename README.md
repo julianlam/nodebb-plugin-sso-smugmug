@@ -1,6 +1,6 @@
-# NodeBB Dropbox SSO
+# SmugMug SSO
 
-NodeBB Plugin that allows users to login/register via their Dropbox account.
+NodeBB Plugin that allows users to login/register via their SmugMug account.
 
 ## Installation
 
@@ -8,6 +8,6 @@ NodeBB Plugin that allows users to login/register via their Dropbox account.
 
 ## Configuration
 
-1. Create a **Dropbox API App** via the [App Console](https://www.dropbox.com/developers/apps)
-1. Locate your Client ID and Secret
-1. Set your "Redirect URI" as the domain you access your NodeBB with `/auth/dropbox/callback` appended to it (e.g. `https://forum.mygreatwebsite.com/auth/dropbox/callback`)
+1. Create or Log Into your SmugMug account and apply for an API key via the ["Hacks" section](http://www.smugmug.com/hack/apikeys): http://www.smugmug.com/hack/apikeys
+1. Locate your Key and Secret under the "Discovery" tab of your account settings.
+1. Set your "Callback URL" as the domain you access your NodeBB with `/auth/smugmug/callback` appended to it (e.g. `https://forum.mygreatwebsite.com/auth/smugmug/callback`)

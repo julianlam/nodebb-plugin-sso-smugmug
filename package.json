@@ -1,16 +1,16 @@
 {
-  "name": "nodebb-plugin-sso-dropbox",
-  "version": "0.0.2",
-  "description": "NodeBB Dropbox SSO",
+  "name": "nodebb-plugin-sso-smugmug",
+  "version": "0.0.0",
+  "description": "NodeBB SmugMug SSO",
   "main": "library.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-dropbox"
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-smugmug"
   },
   "keywords": [
     "nodebb",
     "plugin",
-    "dropbox",
+    "smugmug",
     "sso",
     "single sign on",
     "registration",
@@ -22,11 +22,11 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-dropbox/issues"
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-smugmug/issues"
   },
   "readme": "",
   "readmeFilename": "README.md",
   "dependencies": {
-    "passport-dropbox-oauth2": "~0.1.6"
+    "passport-smugmug": "^0.1.2"
   }
 }
