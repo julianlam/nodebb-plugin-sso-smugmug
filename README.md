@@ -4,7 +4,7 @@ NodeBB Plugin that allows users to login/register via their SmugMug account.
 
 ## Installation
 
-    npm install nodebb-plugin-sso-dropbox
+    npm install nodebb-plugin-sso-smugmug
 
 ## Configuration
 
